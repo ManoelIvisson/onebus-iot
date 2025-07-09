@@ -2,4 +2,4 @@ from conversor_nmea import ConversorNmea
 
 conversor = ConversorNmea()
 
-print(conversor.converter_gprmc("$GPRMC, 161229.487, A, 3723.2475, N, 12158.3416, W, 0.13, 309.62, 120598, , *10"))
+print(conversor.converter_gprmc("$GPRMC,081836,A,0615.00,S,03630.00,W,012.5,270.0,080725,011.3,E*hh"))
