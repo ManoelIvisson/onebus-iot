@@ -4,6 +4,7 @@ import time
 import machine
 from machine import Timer, Pin
 from conversor_nmea import ConversorNmea
+import utime
 
 # Wi-Fi
 #SSID = 'Minha Rede'
@@ -27,10 +28,12 @@ LED_VERMELHO = Pin(13, Pin.OUT)
 LED_VERDE = Pin(11, Pin.OUT)
 
 # Temporizador
-temporizador = Timer(0)
+temporizador = Timer()
+
 
 def conectar_wifi():
     wlan = network.WLAN(network.STA_IF)
+    wlan.active(False)
     wlan.active(True)
     
     LED_VERMELHO.value(1)
@@ -52,3 +55,7 @@ def enviar_dados(timer):
 if __name__ == "__main__":
     conectar_wifi()
     print(conversor.converter_gprmc(sentenca_mock))
+    temporizador.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
+
+    while True:
+        utime.sleep(1)
