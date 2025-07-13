@@ -5,6 +5,7 @@ import machine
 from machine import Timer, Pin
 from conversor_nmea import ConversorNmea
 import utime
+import ujson as json
 
 # Wi-Fi
 #SSID = 'Minha Rede'
@@ -15,13 +16,13 @@ SSID = 'Redmi 9A'
 PASSWORD = 'manoelivisson'
 
 # Servidor Flask
-FLASK_SERVER_IP = '192.168.3.10' # e.g., '192.168.1.100'
+FLASK_SERVER_IP = '192.168.3.145' # e.g., '192.168.1.100'
 FLASK_SERVER_PORT = 5000
-FLASK_ENDPOINT = '/onebus'
+FLASK_ENDPOINT = '/data'
 
 # GPS
 conversor = ConversorNmea()
-sentenca_mock = '$GPRMC,081836,A,0615.00,S,03630.00,W,000.0,360.0,080725,011.3,E*25'
+gps = UART(1, baudrate=9600, tx=Pin(8), rx=Pin(9))
 
 # LEDs
 LED_VERMELHO = Pin(13, Pin.OUT)
@@ -49,7 +50,9 @@ def conectar_wifi():
     print('configurao da rede: ', wlan.ifconfig())
     
 def enviar_dados(timer):
-  # request = urequests.post(f"http://{FLASK_SERVER_IP}:{FLASK_SERVER_PORT}{FLASK_ENDPOINT}")
+  dados_json = json.dumps(conversor.converter_gprmc(sentenca_mock))
+  print(gps)
+  print(gps.readline())
   print("Enviando...")
     
 if __name__ == "__main__":
