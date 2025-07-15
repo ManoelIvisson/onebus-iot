@@ -2,18 +2,18 @@ import network
 import urequests
 import time
 import machine
-from machine import Timer, Pin
+from machine import Timer, Pin, UART
 from conversor_nmea import ConversorNmea
 import utime
 import ujson as json
 
 # Wi-Fi
-#SSID = 'Minha Rede'
-#PASSWORD = 'cim034gio'
+SSID = 'Minha Rede'
+PASSWORD = 'cim034gio'
 
 # Wi-Fi
-SSID = 'Redmi 9A'
-PASSWORD = 'manoelivisson'
+#SSID = 'Redmi 9A'
+#PASSWORD = 'manoelivisson'
 
 # Servidor Flask
 FLASK_SERVER_IP = '192.168.3.145' # e.g., '192.168.1.100'
@@ -23,22 +23,24 @@ FLASK_ENDPOINT = '/data'
 # GPS
 conversor = ConversorNmea()
 gps = UART(1, baudrate=9600, tx=Pin(8), rx=Pin(9))
+ultima_gprmc = None
+buffer_serial = b""
 
 # LEDs
 LED_VERMELHO = Pin(13, Pin.OUT)
 LED_VERDE = Pin(11, Pin.OUT)
 
-# Temporizador
-temporizador = Timer()
+# Temporizadores
+temporizador_coleta_dados = Timer()
+temporizador_envio_dados = Timer()
 
 
 def conectar_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(False)
     wlan.active(True)
-    
     LED_VERMELHO.value(1)
-    
+
     if not wlan.isconnected():
         print('Conectando na rede...')
         wlan.connect(SSID, PASSWORD)
@@ -49,16 +51,37 @@ def conectar_wifi():
     LED_VERDE.value(1)
     print('configurao da rede: ', wlan.ifconfig())
     
-def enviar_dados(timer):
-  dados_json = json.dumps(conversor.converter_gprmc(sentenca_mock))
-  print(gps)
-  print(gps.readline())
-  print("Enviando...")
+
+def ler_gps_continuamente(timer):
+  global ultima_gprmc, buffer_serial
+  dados = gps.read()
+  
+  if dados:
+    buffer_serial += dados
+  
+  while b"\n" in buffer_serial:
+    linha, buffer_serial = buffer_serial.split(b"\n", 1)
+    linha = linha.strip()
+  
+    try:
+      texto = linha.decode('utf-8').strip()
+      for s in texto.split("$"):
+        s = s.strip()
+        if s.startswith('GPRMC'):
+          ultima_gprmc = "$" + s
+    except Exception as e:
+        print("Erro ao decodificar: ", e)
     
+def enviar_dados(timer):
+  global ultima_gprmc    
+  dados_json = json.dumps(conversor.converter_gprmc(ultima_gprmc))
+  print("Enviando...", dados_json)
+
+
 if __name__ == "__main__":
     conectar_wifi()
-    print(conversor.converter_gprmc(sentenca_mock))
-    temporizador.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
+    temporizador_envio_dados.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
+    temporizador_coleta_dados.init(freq=1, mode=Timer.PERIODIC, callback=ler_gps_continuamente)
 
     while True:
         utime.sleep(1)
