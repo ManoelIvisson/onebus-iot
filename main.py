@@ -8,17 +8,11 @@ import utime
 import ujson as json
 
 # Wi-Fi
-SSID = 'Minha Rede'
-PASSWORD = 'cim034gio'
-
-# Wi-Fi
-#SSID = 'Redmi 9A'
-#PASSWORD = 'manoelivisson'
+SSID = 'Roteador'
+PASSWORD = 'onebus'
 
 # Servidor Flask
-FLASK_SERVER_IP = '192.168.3.145' # e.g., '192.168.1.100'
-FLASK_SERVER_PORT = 5000
-FLASK_ENDPOINT = '/data'
+URL = 
 
 # GPS
 conversor = ConversorNmea()
