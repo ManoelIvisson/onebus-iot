@@ -35,10 +35,15 @@ def conectar_wifi():
     wlan.active(True)
     LED_VERMELHO.value(1)
     
+    print('Conectando na rede...')
     if not wlan.isconnected():
-        print('Conectando na rede...')
         wlan.connect(SSID, PASSWORD)
+        
+        tempo_inicial = time.time()
         while not wlan.isconnected():
+			if time.time() - tempo_inicial > 30:
+              print("Tentando conexo novamente...")
+              break
             time.sleep(1)
             print(".")
     LED_VERMELHO.value(0)
@@ -78,10 +83,9 @@ def enviar_dados(timer):
     
 
 if __name__ == "__main__":
-    conectar_wifi()
-    temporizador_envio_dados.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
     temporizador_coleta_dados.init(freq=1, mode=Timer.PERIODIC, callback=ler_gps_continuamente)
-
+    temporizador_envio_dados.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
+    conectar_wifi()
+    
     while True:
         utime.sleep(1)
-
