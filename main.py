@@ -7,12 +7,13 @@ from conversor_nmea import ConversorNmea
 import utime
 import ujson as json
 
+
 # Wi-Fi
 SSID = 'Roteador'
-PASSWORD = 'onebus'
+PASSWORD = 'onebusv1'
 
 # Servidor Flask
-URL = 
+URL = 'https://onebus-zqsm.onrender.com/novas-coordenadas'
 
 # GPS
 conversor = ConversorNmea()
@@ -28,13 +29,12 @@ LED_VERDE = Pin(11, Pin.OUT)
 temporizador_coleta_dados = Timer()
 temporizador_envio_dados = Timer()
 
-
 def conectar_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(False)
     wlan.active(True)
     LED_VERMELHO.value(1)
-
+    
     if not wlan.isconnected():
         print('Conectando na rede...')
         wlan.connect(SSID, PASSWORD)
@@ -44,7 +44,7 @@ def conectar_wifi():
     LED_VERMELHO.value(0)
     LED_VERDE.value(1)
     print('configurao da rede: ', wlan.ifconfig())
-    
+
 
 def ler_gps_continuamente(timer):
   global ultima_gprmc, buffer_serial
@@ -67,10 +67,15 @@ def ler_gps_continuamente(timer):
         print("Erro ao decodificar: ", e)
     
 def enviar_dados(timer):
-  global ultima_gprmc    
-  dados_json = json.dumps(conversor.converter_gprmc(ultima_gprmc))
-  print("Enviando...", dados_json)
-
+  global ultima_gprmc
+  print(ultima_gprmc)
+  if "W" in ultima_gprmc:
+    dados_json = json.dumps(conversor.converter_gprmc(ultima_gprmc))
+    res = urequests.post(URL, headers = {'content-type': 'application/json'}, data = dados_json).json()
+    print("Enviando...", res)
+  else:
+    print("Sem dados vlidos para envio")
+    
 
 if __name__ == "__main__":
     conectar_wifi()
@@ -79,3 +84,4 @@ if __name__ == "__main__":
 
     while True:
         utime.sleep(1)
+
