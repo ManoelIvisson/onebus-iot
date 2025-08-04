@@ -12,6 +12,8 @@ import ujson as json
 SSID = 'Roteador'
 PASSWORD = 'onebusv1'
 
+conectando = False
+
 # Servidor Flask
 URL = 'https://onebus-zqsm.onrender.com/novas-coordenadas'
 
@@ -28,6 +30,7 @@ LED_VERDE = Pin(11, Pin.OUT)
 # Temporizadores
 temporizador_coleta_dados = Timer()
 temporizador_envio_dados = Timer()
+temporizador_verifica_conexao = Timer()
 
 def conectar_wifi():
 	wlan = network.WLAN(network.STA_IF)
@@ -49,8 +52,8 @@ def conectar_wifi():
 	LED_VERMELHO.value(0)
 	LED_VERDE.value(1)
 	print('configurao da rede: ', wlan.ifconfig())
-
-
+  
+    
 def ler_gps_continuamente(timer):
   global ultima_gprmc, buffer_serial
   dados = gps.read()
@@ -66,7 +69,7 @@ def ler_gps_continuamente(timer):
       texto = linha.decode('utf-8').strip()
       for s in texto.split("$"):
         s = s.strip()
-        if s.startswith('GPRMC'):
+        if s.startswith('GPRMC') and "W" in s:
           ultima_gprmc = "$" + s
     except Exception as e:
         print("Erro ao decodificar: ", e)
@@ -74,18 +77,26 @@ def ler_gps_continuamente(timer):
 def enviar_dados(timer):
   global ultima_gprmc
   print(ultima_gprmc)
-  if "W" in ultima_gprmc:
+  if ultima_gprmc is not None:
     dados_json = json.dumps(conversor.converter_gprmc(ultima_gprmc))
-    res = urequests.post(URL, headers = {'content-type': 'application/json'}, data = dados_json).json()
-    print("Enviando...", res)
+    try:
+        res = urequests.post(URL, headers = {'content-type': 'application/json'}, data = dados_json)
+        print("Enviando...", res)
+        if res is None:
+          return None
+        
+        dados = res.json()
+        res.close()
+    except Exception as e:
+      print(e)
   else:
-    print("Sem dados vlidos para envio")
+    print("Sem dados validos para envio")
     
 
 if __name__ == "__main__":
-	temporizador_coleta_dados.init(freq=1, mode=Timer.PERIODIC, callback=ler_gps_continuamente)
-	temporizador_envio_dados.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
-	conectar_wifi()
+    temporizador_coleta_dados.init(freq=1, mode=Timer.PERIODIC, callback=ler_gps_continuamente)
+    temporizador_envio_dados.init(period=10000, mode=Timer.PERIODIC, callback=enviar_dados)
+    conectar_wifi()
     
-	while True:
-		utime.sleep(1)
+    while True:
+        utime.sleep(1)
