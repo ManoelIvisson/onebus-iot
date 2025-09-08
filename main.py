@@ -33,25 +33,25 @@ temporizador_envio_dados = Timer()
 temporizador_verifica_conexao = Timer()
 
 def conectar_wifi():
-	wlan = network.WLAN(network.STA_IF)
-	wlan.active(False)
-	wlan.active(True)
-	LED_VERMELHO.value(1)
-	
-	print('Conectando na rede...')
-	if not wlan.isconnected():
-		wlan.connect(SSID, PASSWORD)
-		
-		tempo_inicial = time.time()
-		while not wlan.isconnected():
-			if time.time() - tempo_inicial > 30:
-				print("Tentando conexo novamente...")
-				break
-			time.sleep(1)
-			print(".")
-	LED_VERMELHO.value(0)
-	LED_VERDE.value(1)
-	print('configurao da rede: ', wlan.ifconfig())
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(False)
+    wlan.active(True)
+    LED_VERMELHO.value(1)
+    
+    print('Conectando na rede...')
+    if not wlan.isconnected():
+        wlan.connect(SSID, PASSWORD)
+        
+        tempo_inicial = time.time()
+        while not wlan.isconnected():
+            if time.time() - tempo_inicial > 30:
+                print("Tentando conexo novamente...")
+                break
+            time.sleep(1)
+            print(".")
+    LED_VERMELHO.value(0)
+    LED_VERDE.value(1)
+    print('configurao da rede: ', wlan.ifconfig())
   
     
 def ler_gps_continuamente(timer):
