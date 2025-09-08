@@ -1,7 +1,7 @@
 class ConversorNmea:
     def converter_gprmc(self, sentenca: str):
         """
-        Função que converte sentenas NMEA GPRMC
+        Funo que converte sentenas NMEA GPRMC
         Retorna um dicionrio com latitude, longitude, data (DD/MM/AAAA) e horrio (HH/MM/SS.SSS)
         """
         sentenca_separada = sentenca.replace(" ", "").split(',')
@@ -13,7 +13,7 @@ class ConversorNmea:
 
             graus_latitude = int(latitude[0:2])
             minutos_latitude = float(latitude[2:])/60
-        
+
             # Longitude
             longitude = sentenca_separada[5]
             direcao_longitude = sentenca_separada[6]
@@ -32,21 +32,18 @@ class ConversorNmea:
         except (IndexError, ValueError) as e:
             print(f'Erro ao processar as coordenadas na sentena GPRMC: {e}')
             return None
-
         try:
             data = sentenca_separada[9]
-            data_formatada = f"{data[0:2]}/{data[2:4]}/20{data[4:]}"
+            data_formatada = f"20{data[4:]}-{data[2:4]}-{data[0:2]}T"
         except (IndexError, ValueError) as e:
             print(f'Erro ao processar a data na sentena GPRMC: {e}')
             return None
-
         try:
             timestamp = sentenca_separada[1]
 
             horas = int(timestamp[0:2])
             minutos = int(timestamp[2:4])
             segundos = float(timestamp[4:])
-
             segundos_int = int(segundos)
             milissegundos = round((segundos - segundos_int) * 1000)
             horario = f"{horas:02d}:{minutos:02d}:{segundos_int:02d}.{milissegundos:03d}"
@@ -54,10 +51,11 @@ class ConversorNmea:
             print(f'Erro ao processar as horas na sentena GPRMC: {e}')
             return None
 
+        datetime = data + horario
+
         return {
             "id": 1,
             "latitude": round(latitude, 6),
             "longitude": round(longitude, 6),
-            "data": data_formatada,
-            "horario": horario
+            "datetime": datetime,
         }
