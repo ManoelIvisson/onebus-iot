@@ -13,9 +13,10 @@ SSID = 'Roteador'
 PASSWORD = 'onebusv1'
 
 conectando = False
+mac_str = ''
 
 # Servidor Flask
-URL = 'https://onebus-zqsm.onrender.com/novas-coordenadas'
+URL = 'https://onebus-backend.onrender.com/ponto-trajeto/create'
 
 # GPS
 conversor = ConversorNmea()
@@ -33,25 +34,33 @@ temporizador_envio_dados = Timer()
 temporizador_verifica_conexao = Timer()
 
 def conectar_wifi():
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(False)
-    wlan.active(True)
-    LED_VERMELHO.value(1)
-    
-    print('Conectando na rede...')
-    if not wlan.isconnected():
-        wlan.connect(SSID, PASSWORD)
-        
-        tempo_inicial = time.time()
-        while not wlan.isconnected():
-            if time.time() - tempo_inicial > 30:
-                print("Tentando conexo novamente...")
-                break
-            time.sleep(1)
-            print(".")
-    LED_VERMELHO.value(0)
-    LED_VERDE.value(1)
-    print('configurao da rede: ', wlan.ifconfig())
+  global mac_str
+  
+  wlan = network.WLAN(network.STA_IF)
+  wlan.active(False)
+  wlan.active(True)
+  LED_VERMELHO.value(1)
+  
+  # obtém o endereço MAC (bytes)
+  mac = wlan.config('mac')
+
+  # exibe o MAC formatado
+  mac_str = ':'.join(['{:02X}'.format(b) for b in mac])
+  
+  print('Conectando na rede...')
+  if not wlan.isconnected():
+      wlan.connect(SSID, PASSWORD)
+      
+      tempo_inicial = time.time()
+      while not wlan.isconnected():
+          if time.time() - tempo_inicial > 30:
+              print("Tentando conexo novamente...")
+              break
+          time.sleep(1)
+          print(".")
+  LED_VERMELHO.value(0)
+  LED_VERDE.value(1)
+  print('configurao da rede: ', wlan.ifconfig())
   
     
 def ler_gps_continuamente(timer):
@@ -70,23 +79,30 @@ def ler_gps_continuamente(timer):
       for s in texto.split("$"):
         s = s.strip()
         if s.startswith('GPRMC') and "W" in s:
-          ultima_gprmc = "$" + s
+          ultima_gprmc = "$" + s  
     except Exception as e:
         print("Erro ao decodificar: ", e)
     
 def enviar_dados(timer):
-  global ultima_gprmc
+  global ultima_gprmc, mac_str
   print(ultima_gprmc)
   if ultima_gprmc is not None:
-    dados_json = json.dumps(conversor.converter_gprmc(ultima_gprmc))
+    dados = conversor.converter_gprmc(ultima_gprmc)
+    if dados is not None:
+      dados_json = {
+        "mac": mac_str,
+        "latitude": dados["latitude"],
+        "longitude": dados["longitude"],
+        "criado_em": dados["criado_em"]
+      }
     try:
-        res = urequests.post(URL, headers = {'content-type': 'application/json'}, data = dados_json)
-        print("Enviando...", res)
-        if res is None:
-          return None
-        
-        dados = res.json()
-        res.close()
+      res = urequests.post(URL, headers = {'content-type': 'application/json'}, data = json.dumps(dados_json))
+      print("Enviando...", res)
+      if res is None:
+        return None
+      
+      dados = res.json()
+      res.close()
     except Exception as e:
       print(e)
   else:

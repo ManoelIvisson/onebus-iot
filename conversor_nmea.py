@@ -34,7 +34,7 @@ class ConversorNmea:
             return None
         try:
             data = sentenca_separada[9]
-            data_formatada = f"20{data[4:]}-{data[2:4]}-{data[0:2]}T"
+            data_formatada = f"20{data[4:]}-{data[2:4]}-{data[0:2]}"
         except (IndexError, ValueError) as e:
             print(f'Erro ao processar a data na sentena GPRMC: {e}')
             return None
@@ -46,16 +46,15 @@ class ConversorNmea:
             segundos = float(timestamp[4:])
             segundos_int = int(segundos)
             milissegundos = round((segundos - segundos_int) * 1000)
-            horario = f"{horas:02d}:{minutos:02d}:{segundos_int:02d}.{milissegundos:03d}"
+            horario = f"{horas:02d}:{minutos:02d}:{segundos_int:02d}"
         except (IndexError, ValueError) as e:
             print(f'Erro ao processar as horas na sentena GPRMC: {e}')
             return None
 
-        datetime = data + horario
+        datetime = data_formatada + " " + horario
 
         return {
-            "id": 1,
             "latitude": round(latitude, 6),
             "longitude": round(longitude, 6),
-            "datetime": datetime,
+            "criado_em": datetime
         }
