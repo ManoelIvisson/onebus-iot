@@ -16,7 +16,7 @@ conectando = False
 mac_str = ''
 
 # Servidor Flask
-URL = 'https://onebus-backend.onrender.com/ponto-trajeto/create'
+URL = 'https://onebus-backend.onrender.com/coordenada-viagem/create'
 
 # GPS
 conversor = ConversorNmea()
