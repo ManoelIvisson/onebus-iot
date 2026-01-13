@@ -16,7 +16,7 @@ conectando = False
 mac_str = ''
 
 # Servidor Flask
-URL = 'https://onebus-backend.onrender.com/coordenada-viagem/create'
+URL = 'https://onebus-backend.onrender.com/api/v1/coordenada-viagem/create'
 
 # GPS
 conversor = ConversorNmea()
@@ -46,6 +46,7 @@ def conectar_wifi():
 
   # exibe o MAC formatado
   mac_str = ':'.join(['{:02X}'.format(b) for b in mac])
+  print(f"MAC: {mac_str}")
   
   print('Conectando na rede...')
   if not wlan.isconnected():
@@ -54,7 +55,7 @@ def conectar_wifi():
       tempo_inicial = time.time()
       while not wlan.isconnected():
           if time.time() - tempo_inicial > 30:
-              print("Tentando conexo novamente...")
+              print("Tentando conexao novamente...")
               break
           time.sleep(1)
           print(".")
@@ -80,6 +81,8 @@ def ler_gps_continuamente(timer):
         s = s.strip()
         if s.startswith('GPRMC') and "W" in s:
           ultima_gprmc = "$" + s  
+        #else:
+        #  print(f"Tentando conectar: {s}")
     except Exception as e:
         print("Erro ao decodificar: ", e)
     
